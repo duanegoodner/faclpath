@@ -6,7 +6,8 @@ Implements ACLPath, a sub-class of the Python standard library's `pathlib.Path` 
 
 ## System Requirements
 
-A Linux distribution with with the `acl` package installed.
+* A Linux distribution with the `acl` package installed.
+* Python version 3.7 or higher
 
 ## Project Status
 
