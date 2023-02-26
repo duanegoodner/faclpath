@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from exceptions import ExcessRegexMatches, InsufficientRegexMatches
 from file_setting import FileSettingType
 
 
@@ -11,10 +12,14 @@ class ItemFromGetFacl:
     max_entries: int | None
 
     def validate_matches(self, matched_groups: list[str]):
-        if self.max_entries is not None:
-            assert len(matched_groups) <= self.max_entries
-        if self.required:
-            assert len(matched_groups) >= 1
+        if (self.max_entries is not None) and (
+            len(matched_groups) > self.max_entries
+        ):
+            raise ExcessRegexMatches(
+                self.attribute, len(matched_groups), self.max_entries
+            )
+        if self.required and len(matched_groups) < 1:
+            raise InsufficientRegexMatches(self.attribute, len(matched_groups))
 
     def to_dict_entry(self, matched_groups: list[str]):
         if len(matched_groups) == 0:
@@ -24,9 +29,7 @@ class ItemFromGetFacl:
         else:
             key_vals = [item.split(":") for item in matched_groups]
             assert all([len(pair) == 2 for pair in key_vals])
-            return {
-                key: value for key, value in key_vals
-            }
+            return {key: value for key, value in key_vals}
 
 
 getfacl_output_items = [

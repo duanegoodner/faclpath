@@ -1,6 +1,7 @@
 import stat
 import subprocess
 from data_containers import ACLData, GetFaclResult
+from exceptions import AbnormalExitFromSystemGetfacl
 from pathlib import Path
 
 
@@ -8,11 +9,18 @@ class ACLPath(type(Path())):
 
     def _call_getfacl_subprocess(self) -> str:
         command = ["getfacl", str(self)]
-        return subprocess.run(
+        getfacl_result = subprocess.run(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-        ).stdout.decode("utf-8")
+        )
+        if getfacl_result.returncode != 0:
+            raise AbnormalExitFromSystemGetfacl(
+                return_code=getfacl_result.returncode,
+                error_msg=getfacl_result.stderr.decode("utf-8")
+            )
+
+        return getfacl_result.stdout.decode("utf-8")
 
     def getfacl(self) -> GetFaclResult:
         raw_output = self._call_getfacl_subprocess()
