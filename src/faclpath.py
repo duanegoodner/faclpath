@@ -1,7 +1,7 @@
 import stat
 import subprocess
 from data_containers import ACLData, GetFaclResult
-from exceptions import AbnormalExitFromSystemGetfacl
+from faclpath_exceptions import AbnormalExitFromSystemGetfacl
 from pathlib import Path
 
 
@@ -32,6 +32,6 @@ class ACLPath(type(Path())):
 
 
 if __name__ == "__main__":
-    demo_path = str(Path(__file__).parent.parent / "demo")
-    my_acl_dir = ACLPath(demo_path)
+    demo_path = str(Path(__file__).parent.parent / "demo_local")
+    my_acl_dir = ACLPath("blah")
     result = my_acl_dir.getfacl()
