@@ -10,8 +10,8 @@ class ACLPath(type(Path())):
 
     def getfacl(self) -> GetFaclResult:
         raw_output = SubProcessCaller(
-            # for now, don't show effective rights
-            # (would require regex modifications)
+            # -E option --> don't show effective permissions
+            # (we can calculate those from user/group permissions and mask)
             command=["getfacl", "-E", str(self)],
             default_exception=GetFaclSubprocessException,
         ).call_with_stdout_capture()
