@@ -1,7 +1,8 @@
 import stat
-from .data_containers import ACLData, GetFaclResult
-from .faclpath_exceptions import GetFaclSubprocessException
 from pathlib import Path
+
+from .aclpath_exceptions import GetFaclSubprocessException
+from .data_containers import ACLData, GetFaclResult
 from .subprocess_caller import SubProcessCaller
 
 
