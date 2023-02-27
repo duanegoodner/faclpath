@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
-from file_setting import MaskSetting, PermissionSetting
-from getfacl_output_spec import getfacl_output_items
+from .file_setting import MaskSetting, PermissionSetting
+from .getfacl_output_spec import getfacl_output_items
 
 
 @dataclass

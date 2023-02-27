@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from faclpath_exceptions import ExcessRegexMatches, InsufficientRegexMatches
-from file_setting import FileSettingType
+from .faclpath_exceptions import ExcessRegexMatches, InsufficientRegexMatches
+from .file_setting import FileSettingType
 
 
 @dataclass()

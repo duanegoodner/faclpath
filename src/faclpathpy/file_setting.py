@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from faclpath_exceptions import InvalidFileSetting
+from .faclpath_exceptions import InvalidFileSetting
 
 
 class FileSettingType(Enum):

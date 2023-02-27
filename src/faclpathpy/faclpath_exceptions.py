@@ -1,21 +1,28 @@
-from pathlib import Path
+import subprocess
+from abc import ABC, abstractmethod
 
 
-class AbnormalExitFromSystemGetfacl(Exception):
-    def __init__(self, return_code: int, error_msg: str):
-        self.return_code = return_code
-        self.error_msg = error_msg
+class SubprocessException(Exception, ABC):
+    def __init__(self, completed_process: subprocess.CompletedProcess):
+        self.completed_process = completed_process
 
     @property
-    def msg(self):
-        return (
-            "\nSubprocess call to getfacl exited abnormally.\n"
-            f"RETURN CODE: {self.return_code}\n"
-            f"STD ERR MESSAGE: {self.error_msg}"
-        )
+    @abstractmethod
+    def msg(self) -> str:
+        ...
 
     def __str__(self):
         return self.msg
+
+
+class GetFaclSubprocessException(SubprocessException):
+    @property
+    def msg(self) -> str:
+        return (
+            "\ngetfacl subprocess exited abnormally.\nSubprocess args:"
+            f" {self.completed_process.args}\nSubprocess return code:"
+            f" {self.completed_process.returncode}"
+        )
 
 
 class ExcessRegexMatches(Exception):
