@@ -1,2 +1,3 @@
-[project]
-name = "faclpathpy"
+[build-system]
+requires = ["setuptools>=63.2.0", "wheel>=0.37.1"]
+build-backend = "setuptools.build_meta"
