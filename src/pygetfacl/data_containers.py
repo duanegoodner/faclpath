@@ -42,5 +42,9 @@ class GetFaclResult:
     def acl_data(self) -> ACLData:
         return self._acl_data
 
+    @property
+    def raw_std_out(self):
+        return self._raw_std_out
+
     def __str__(self):
         return self._raw_std_out.strip()

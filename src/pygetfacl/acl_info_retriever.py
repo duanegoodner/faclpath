@@ -6,7 +6,14 @@ from .subprocess_caller import SubProcessCaller
 
 
 class ACLInfoRetriever:
+    """
+    Has a filepath data member and methods to retrieve ALC info for that file
+    """
     def __init__(self, path: str | Path):
+        """
+        Args:
+            path: file path for which ACL info is retrieved
+        """
         if type(path) == str:
             self._path = Path(path)
         elif isinstance(path, Path):
@@ -15,6 +22,11 @@ class ACLInfoRetriever:
             raise TypeError
 
     def getfacl(self) -> GetFaclResult:
+        """
+        Retrieves,
+        Returns:
+
+        """
         raw_output = SubProcessCaller(
             # -E option --> don't show effective permissions
             # (we can calculate those from user/group permissions and mask)

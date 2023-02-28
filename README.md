@@ -24,26 +24,41 @@ my_acl_data = getfacl_result.acl_data
 ```
 
 ## Try *aclpath* in a Docker Container
-If you want to try *pygetfacl* without installing it in a local environment and/or you're not on a Linux system, you can test it out in a Docker container. From the aclpath project root, run the following shell commands to build a Docker image, start a container, and `docker exec` into the container.
+If you want to try *pygetfacl* without installing it in a local environment and/or you're not on a Linux system, test it out in a Docker container built using files provided in the `demo_docker` directory. 
+
+From the aclpath project root, run the following shell commands to build a Docker image, start a container, and `docker exec` into home directory of existing user_a.
 ```shell
 $ docker build ./demo_docker -t pygetfacl_demo
 $ docker run -it -d --rm --name="pygetfacl_demo" pygetfacl_demo
-$ docker exec -it -w /home/user_a aclpath_demo /bin/bash
+$ docker exec -it -w /home/user_a pygetfacl_demo /bin/bash
 ```
 
-Once you're in the container, start an interactive Pyton console.
+
+From the terminal, run the following command to create a test directory with some interesting ACL settings, and start the Python interpreter in interactive mode.
 ```shell
-user_a@container-id:~$ python
+# create a test directory, user & group, and apply some ACL settings
+$ mkdir pygetfacl_test_dir \
+  && sudo useradd pygetfacl_test_user \
+  && sudo groupadd pygetfacl_test_group \
+  && setfacl -d -m g::rwx pygetfacl_test_dir \
+  && setfacl -m u:pygetfacl_test_user:rwx pygetfacl_test_dir \
+  && setfacl -m g:pygetfacl_test_group:rw pygetfacl_test_dir \
+  && python
 ```
 
-Then, try the following Python commands:
+Then, in the Python interpreter: 
 ```pycon
 >>> from pygetfacl import ACLInfoRetriever
->>> info_retriever = ACLInfoRetriever("/home/user_a/test_dir")
+>>> info_retriever = ACLInfoRetriever("pygetfacl_test_dir")  
 >>> getfacl_result = info_retriever.getfacl()
->>> my_acl_data = getfacl_result.acl_data
+```
+The value stored in getfacl_result is a GetFaclResult with two public properties.
+GetFaclResult.raw_std_out returns ACL information in the same string format provided by the Linux system getfacl, and GetFaclResult.acl_data which returns the same information in the structured format of an ACLData object.
+
+```pycon
 >>> import pprint
->>> pprint.pprint(my_acl_data)
+>>> pprint.pprint(getfacl_result.raw_std_out)
+>>> pprint.pprint(getfacl_result.acl_data)
 ACLData(owning_user='user_a',
         owning_group='group_x',
         flags=None,

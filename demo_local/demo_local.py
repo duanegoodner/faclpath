@@ -1,5 +1,6 @@
-from aclpath import ACLInfoRetriever
 from pathlib import Path
+
+from aclpath import ACLInfoRetriever
 
 test_path = Path(__file__).parent
 my_get_facl_result = ACLInfoRetriever(test_path).getfacl()
