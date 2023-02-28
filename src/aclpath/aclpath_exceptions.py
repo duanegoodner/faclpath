@@ -2,6 +2,9 @@ import subprocess
 from abc import ABC, abstractmethod
 
 
+class ACLInfoRetrieverTypeError(TypeError)
+
+
 class SubprocessException(Exception, ABC):
     def __init__(self, completed_process: subprocess.CompletedProcess):
         self.completed_process = completed_process
