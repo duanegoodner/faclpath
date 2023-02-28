@@ -1,4 +1,3 @@
-import stat
 from pathlib import Path
 
 from .aclpath_exceptions import GetFaclSubprocessException
@@ -49,8 +48,6 @@ class ACLInfoRetriever:
 if __name__ == "__main__":
     demo_path = str(Path(__file__).parent.parent.parent / "demo_local")
     my_info_retriever = ACLInfoRetriever(demo_path)
-    # my_acl_dir = ACLPath(demo_path)
-    # result = my_acl_dir.getfacl()
     result = my_info_retriever.getfacl()
     print(result)
 

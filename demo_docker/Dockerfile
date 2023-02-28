@@ -15,7 +15,7 @@ RUN useradd -s /bin/bash -m ${USER_A} \
     && chmod 0440 /etc/sudoers.d/${USER_A}
 USER ${USER_A}
 
-# create a group, another use, and a directory to use in our aclpath demo
+# create a group, another use, and a directory to use in our pygetfacl demo
 ENV TEST_DIR=${USER_A_HOME}/test_dir
 RUN sudo groupadd ${GROUP_X} \
     && sudo useradd -s /bin/bash -m ${USER_B} \
@@ -30,8 +30,8 @@ RUN  chmod -R 744 ${TEST_DIR} \
     && setfacl -R -m g:${GROUP_X}:rwx ${TEST_DIR} \
     && setfacl -R -d -m o::--- ${TEST_DIR}
 
-# install aclpath
-RUN pip install git+https://github.com/duanegoodner/aclpath
+# install pygetfacl
+RUN pip install git+https://github.com/duanegoodner/pygetfacl
 
 # set up container entrypoint
 COPY entrypoint.sh ./

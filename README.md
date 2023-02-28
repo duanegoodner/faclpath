@@ -1,8 +1,6 @@
-# aclpath
+# pygetfacl
 
-Implements ACLPath, a sub-class of the Python standard library's 
-[`pathlib.Path`](https://docs.python.org/3/library/pathlib.html#concrete-paths)
-class. ACLPath provides methods to parse Access Control List (ACL) information provided by the Unix / Linux [`getfacl`](https://manpages.ubuntu.com/manpages/trusty/man1/getfacl.1.html) command and store that information as a Python object.
+Retrieves Access Control List (ACL) information provided by the Unix / Linux [`getfacl`](https://manpages.ubuntu.com/manpages/trusty/man1/getfacl.1.html) command and store that information as a Python object.
 
 ## System Requirements
 
@@ -12,17 +10,17 @@ class. ACLPath provides methods to parse Access Control List (ACL) information p
 ## Installation
 From the command line:
 ```shell
-pip install git+https://github.com/duanegoodner/aclpath
+pip install git+https://github.com/duanegoodner/pygetfacl
 ```
 
 ## Basic Usage
 
 ```python
-from aclpath import ACLPath
+from pygetfacl import ACLInfoRetriever
 
-test_dir = ACLPath("/some/path/")
-get_facl_result = test_dir.getfacl()
-my_acl_data = get_facl_result.acl_data
+info_retriever = ACLInfoRetriever("/some/path/")
+getfacl_result = info_retriever.getfacl()
+my_acl_data = getfacl_result.acl_data
 ```
 
 ## Try *aclpath* in a Docker container
@@ -40,8 +38,9 @@ user_a@container-id:~$ python
 
 Then try the following Python commands:
 ```pycon
->>> from aclpath import ACLPath
->>> get_facl_result = test_dir.getfacl()
+>>> from pygetfacl import ACLInfoRetriever
+>>> info_retriever = ACLInfoRetriever("/home/user_a/test_dir")
+>>> get_facl_result = info_retriever.getfacl()
 >>> my_acl_data = get_facl_result.acl_data
 >>> import pprint
 >>> pprint.pprint(my_acl_data)
