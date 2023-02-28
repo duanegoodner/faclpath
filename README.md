@@ -26,8 +26,8 @@ my_acl_data = getfacl_result.acl_data
 ## Try *aclpath* in a Docker container
 If you want to try aclpath without installing it in a local environment and/or you're not on a Linux system, you can test it out in a Docker container. From the aclpath project root, run the following shell commands to build a Docker image, start a container, and `docker exec` into the container.
 ```shell
-$ docker build ./demo_docker -t aclpath_demo
-$ docker run -it -d --rm --name="aclpath_demo" aclpath_demo
+$ docker build ./demo_docker -t pygetfacl_demo
+$ docker run -it -d --rm --name="pygetfacl_demo" pygetfacl_demo
 $ docker exec -it -w /home/user_a aclpath_demo /bin/bash
 ```
 
@@ -40,8 +40,8 @@ Then try the following Python commands:
 ```pycon
 >>> from pygetfacl import ACLInfoRetriever
 >>> info_retriever = ACLInfoRetriever("/home/user_a/test_dir")
->>> get_facl_result = info_retriever.getfacl()
->>> my_acl_data = get_facl_result.acl_data
+>>> getfacl_result = info_retriever.getfacl()
+>>> my_acl_data = getfacl_result.acl_data
 >>> import pprint
 >>> pprint.pprint(my_acl_data)
 ACLData(owning_user='user_a',
