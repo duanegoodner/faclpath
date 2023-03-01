@@ -2,14 +2,18 @@ import subprocess
 from abc import ABC, abstractmethod
 
 
-class SubprocessException(Exception, ABC):
+class SubprocessException(Exception):
     def __init__(self, completed_process: subprocess.CompletedProcess):
         self.completed_process = completed_process
 
     @property
     @abstractmethod
     def msg(self) -> str:
-        ...
+        return (
+            "Subprocess exited abnormally.\n Subprocess args ="
+            f" {self.completed_process.args}\n Subprocess return code ="
+            f" {self.completed_process.returncode}"
+        )
 
     def __str__(self):
         return self.msg

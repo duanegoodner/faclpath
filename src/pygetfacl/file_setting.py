@@ -11,6 +11,10 @@ class FileSettingType(Enum):
 
 
 class FileSetting(ABC):
+    """
+    Abstract class representing a file setting permission. Implemented as
+    PermissionSetting or Mask
+    """
     _vals_if_all_bits_set = {
         FileSettingType.PERMISSIONS: "rwx",
         FileSettingType.FLAGS: "sst",
@@ -47,10 +51,17 @@ class FileSetting(ABC):
 class PermissionSetting(FileSetting):
     @property
     def _all_bits_set(self) -> str:
+        """
+        Returns: String representation of a PermissionSetting value when all
+        bits are set
+        """
         return "rwx"
 
 
-class MaskSetting(FileSetting):
+class FlagSetting(FileSetting):
     @property
     def _all_bits_set(self) -> str:
+        """
+        Returns: String representation of MaskSetting value when all bits are set
+        """
         return "sst"

@@ -1,32 +1,34 @@
 import subprocess
-from collections import defaultdict
-from typing import Callable
-
 from .aclpath_exceptions import SubprocessException
 
 
 class SubProcessCaller:
+    """
+    Handles details of a subprocess call.
+    """
     def __init__(
         self,
         command: list[str],
-        default_exception: Callable[..., SubprocessException],
-        specific_exceptions: dict[
-            int, Callable[..., SubprocessException]
-        ] = None,
     ):
+        """
+        Args:
+            command: list of strings representing the command to be run
+        Raises:
+            SubprocessException if subprocess return code != 0
+        """
         self._command = command
-        self._exception_lookup = defaultdict(lambda: default_exception)
-        if specific_exceptions:
-            for key, val in specific_exceptions.items():
-                self._exception_lookup[key] = val
 
     def call_with_stdout_capture(self):
+        """
+        Calls subprocess in a way that will return standard out if subprocess
+        return code == 0, and raise exception otherwise.
+        Returns:
+            string obtained from subprocess standard out
+        """
         subprocess_result = subprocess.run(
             self._command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if subprocess_result.returncode != 0:
-            raise self._exception_lookup[subprocess_result.returncode](
-                subprocess_result
-            )
+            raise SubprocessException(subprocess_result)
 
         return subprocess_result.stdout.decode("utf-8")

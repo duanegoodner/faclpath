@@ -1,18 +1,17 @@
 from pathlib import Path
 
-from .aclpath_exceptions import GetFaclSubprocessException
 from .data_containers import ACLData, GetFaclResult
 from .subprocess_caller import SubProcessCaller
 
 
 class ACLInfoRetriever:
     """
-    Has a filepath data member and methods to retrieve ALC info for that file
+    Retrieves Access Control List info for its ._path data member
     """
     def __init__(self, path: str | Path):
         """
-        Args:
-            path: file path for which ACL info is retrieved
+        Constructor
+        :param path: The filepath that ACL info is retrieved for
         """
         if type(path) == str:
             self._path = Path(path)
@@ -23,15 +22,14 @@ class ACLInfoRetriever:
 
     def getfacl(self) -> GetFaclResult:
         """
-        Retrieves,
-        Returns:
-
+        Gets ACL info for self._path
+        :return: a :class: `GetFaclResult` object composed of raw string output
+        from a subprocess call to system getfacl, and a :class: `ACLData`
+        object
         """
         raw_output = SubProcessCaller(
             # -E option --> don't show effective permissions
-            # (we can calculate those from user/group permissions and mask)
-            command=["getfacl", "-E", str(self._path)],
-            default_exception=GetFaclSubprocessException,
+            command=["getfacl", "-E", str(self._path)]
         ).call_with_stdout_capture()
 
         acl_data = ACLData.from_getfacl_cmd_output(raw_output)
@@ -39,24 +37,7 @@ class ACLInfoRetriever:
         return GetFaclResult(raw_std_out=raw_output, acl_data=acl_data)
 
 
-# class ACLPath(type(Path())):
-#
-#     def getfacl(self) -> GetFaclResult:
-#         raw_output = SubProcessCaller(
-#             # -E option --> don't show effective permissions
-#             # (we can calculate those from user/group permissions and mask)
-#             command=["getfacl", "-E", str(self)],
-#             default_exception=GetFaclSubprocessException,
-#         ).call_with_stdout_capture()
-#
-#         acl_data = ACLData.from_getfacl_cmd_output(raw_output)
-#
-#         return GetFaclResult(raw_std_out=raw_output, acl_data=acl_data)
-#
-#     def standard_filemode(self) -> str:
-#         return stat.filemode(self.stat().st_mode)
-
-
+# for dev testing
 if __name__ == "__main__":
     demo_path = str(Path(__file__).parent.parent.parent / "demo_local")
     my_info_retriever = ACLInfoRetriever(demo_path)
