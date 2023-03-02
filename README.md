@@ -26,58 +26,77 @@ $ pip install git+https://github.com/duanegoodner/pygetfacl
 
 From the command line (either in your local environment, or a Docker container), run the following command to create a test directory with some interesting ACL settings, and start the Python interpreter in interactive mode.
 ```shell
-$ mkdir pygetfacl_test_dir \
-  && sudo useradd pygetfacl_test_user \
-  && sudo groupadd pygetfacl_test_group \
-  && setfacl -d -m g::rwx pygetfacl_test_dir \
-  && setfacl -m u:pygetfacl_test_user:rwx pygetfacl_test_dir \
-  && setfacl -m g:pygetfacl_test_group:rw pygetfacl_test_dir \
+$ mkdir test_dir \
+  && sudo useradd user_b \
+  && setfacl -bn test_dir \
+  && setfacl -d -m g::rwx test_dir \
+  && setfacl -m u:user_b:rwx test_dir \
   && python
 ```
 
 Then, in the Python interpreter: 
 ```pycon
 >>> from pygetfacl import ACLInfoRetriever
->>> info_retriever = ACLInfoRetriever("pygetfacl_test_dir")  
->>> getfacl_result = info_retriever.getfacl()
+>>> retriever = ACLInfoRetriever("test_dir")  
+>>> getfacl_result = retriever.getfacl()
 ```
-The value stored in getfacl_result is a GetFaclResult with two public properties. GetFaclResult.raw_std_out returns ACL information in the same string format provided by the Linux system getfacl. GetFaclResult.acl_data returns the same information in a structured ACLData object. Let's take a look at both formats:
+The value stored in getfacl_result is a GetFaclResult with two public properties.
+* GetFaclResult.raw_std_out returns ACL information in the same string format provided by the Linux system getfacl.
+* GetFaclResult.acl_data returns the same information in a structured ACLData object.
+Let's take a look at both formats:
 ```pycon
 >>> import pprint
 >>> pprint.pprint(getfacl_result.raw_std_out)
-('# file: pygetfacl_test_dir\n'
+('# file: test_dir\n'
  '# owner: user_a\n'
  '# group: user_a\n'
+ '# flags: -s-\n'
  'user::rwx\n'
- 'user:pygetfacl_test_user:rwx\n'
- 'group::r-x\n'
- 'group:pygetfacl_test_group:rw-\n'
- 'mask::rwx\n'
- 'other::r-x\n'
+ 'user:user_b:rwx\n'
+ 'group::rwx\n'
+ 'group:group_x:rwx\n'
+ 'mask::r--\n'
+ 'other::rwx\n'
  'default:user::rwx\n'
+ 'default:user:user_b:rwx\n'
  'default:group::rwx\n'
- 'default:other::r-x\n'
+ 'default:group:group_x:rwx\n'
+ 'default:mask::r--\n'
+ 'default:other::rwx\n'
  '\n')
 
 >>> pprint.pprint(getfacl_result.acl_data)
 ACLData(owning_user='user_a',
         owning_group='user_a',
-        flags=None,
-        user_permissions='rwx',
-        group_permissions='r-x',
-        other_permissions='r-x',
-        mask='rwx',
-        special_users_permissions={'pygetfacl_test_user': 'rwx'},
-        special_groups_permissions={'pygetfacl_test_group': 'rw-'},
-        default_user_permissions='rwx',
-        default_group_permissions='rwx',
-        default_other_permissions='r-x')
+        flags= (uid=False, gid=True, sticky=False),
+        user_permissions= (r=True, w=True, x=True),
+        special_users_permissions=[
+            SpecialUserPermission(
+                username='user_b',permissions= (r=True, w=True, x=True))],
+        group_permissions= (r=True, w=True, x=True),
+        special_groups_permissions=[
+            pecialGroupPermission(
+                group_name='group_x', permissions= (r=True, w=True, x=True)
+                )],
+        mask= (r=True, w=False, x=False),
+        other_permissions= (r=True, w=True, x=True),
+        default_user_permissions= (r=True, w=True, x=True),
+        default_special_users_permissions=[
+            SpecialUserPermission(
+                username='user_b', permissions= (r=True, w=True, x=True))],
+        default_group_permissions= (r=True, w=True, x=True),
+        default_special_groups_permissions=[
+            SpecialGroupPermission(
+                group_name='group_x', permissions= (r=True, w=True, x=True))],
+        default_mask= (r=True, w=False, x=False),
+        default_other_permissions= (r=True, w=True, x=True))
+
 ```
 
 With ACL info stored in an ACLData object, our Python program can easily access it.
 ```pycon
 >>> test_user_permission = (
-getfacl_result.acl_data.special_users_permissions.get('pygetfacl_test_user')
+getfacl_result.acl_data.special_users_permissions.get('user_b')
 )
 >>> if test_user_permission == 'rwx':
         print('Oh good. Our test user has full access to the test directory.')

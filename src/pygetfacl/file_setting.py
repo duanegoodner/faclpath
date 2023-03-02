@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import Enum, auto
 
 
 def validate_bit_string(
@@ -20,17 +19,17 @@ def validate_bit_string(
     )
 
 
-class FileSettingStringType(Enum):
-    PERMISSIONS = auto()
-    FLAGS = auto()
-    NONE = auto()
-
-
 class PermissionSetting:
     def __init__(self, r: bool, w: bool, x: bool):
         self._r = r
         self._w = w
         self._x = x
+
+    def __repr__(self):
+        r_char = "r" if self._r else "-"
+        w_char = "w" if self._w else "-"
+        x_char = "x" if self._x else "-"
+        return f"{r_char}{w_char}{x_char}"
 
     @property
     def r(self) -> bool:
@@ -68,11 +67,17 @@ def compute_effective_permissions(
 
 class FlagSetting:
     def __init__(
-        self, uid_is_set: bool, gid_is_set: bool, sticky_is_set: bool
+        self, uid: bool, gid: bool, sticky: bool
     ):
-        self._uid_is_set = uid_is_set
-        self._gid_is_set = gid_is_set
-        self._sticky_is_set = sticky_is_set
+        self._uid = uid
+        self._gid = gid
+        self._sticky = sticky
+
+    def __repr__(self):
+        uid_char = "s" if self._uid else "-"
+        gid_char = "s" if self._gid else "-"
+        sticky_char = "t" if self._sticky else "-"
+        return f"{uid_char}{gid_char}{sticky_char}"
 
     @classmethod
     def from_string(cls, flag_string: str):
@@ -82,26 +87,26 @@ class FlagSetting:
             no_bits_set_repr="---",
             required_length=3,
         )
-        uid_is_set = flag_string[0] == "s"
-        gid_is_set = flag_string[1] == "s"
-        sticky_is_set = flag_string[2] == "t"
+        uid = flag_string[0] == "s"
+        gid = flag_string[1] == "s"
+        sticky = flag_string[2] == "t"
         return cls(
-            uid_is_set=uid_is_set,
-            gid_is_set=gid_is_set,
-            sticky_is_set=sticky_is_set,
+            uid=uid,
+            gid=gid,
+            sticky=sticky,
         )
 
     @property
-    def uid_is_set(self) -> bool:
-        return self._uid_is_set
+    def uid(self) -> bool:
+        return self._uid
 
     @property
-    def gid_is_set(self):
-        return self._gid_is_set
+    def gid(self):
+        return self._gid
 
     @property
-    def sticky_is_set(self):
-        return self._sticky_is_set
+    def sticky(self):
+        return self._sticky
 
 
 @dataclass

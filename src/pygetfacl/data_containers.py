@@ -1,13 +1,16 @@
 import re
 from dataclasses import dataclass
 
-from file_setting import (
-    FlagSetting,
-    PermissionSetting,
-    SpecialGroupPermission,
-    SpecialUserPermission,
-)
-from output_spec import getfacl_output_items
+# from .file_setting import (
+#     FlagSetting,
+#     PermissionSetting,
+#     SpecialGroupPermission,
+#     SpecialUserPermission,
+# )
+# from .output_spec import getfacl_output_items
+
+import pygetfacl.file_setting as fs
+import pygetfacl.output_spec as osp
 
 
 @dataclass
@@ -30,26 +33,29 @@ class ACLData:
 
     owning_user: str
     owning_group: str
-    flags: FlagSetting | None
-    mask: PermissionSetting | None
-    user_permissions: PermissionSetting
-    group_permissions: PermissionSetting
-    other_permissions: PermissionSetting
-    special_users_permissions: list[SpecialUserPermission]
-    special_groups_permissions: list[SpecialGroupPermission]
-    default_user_permissions: PermissionSetting | None
-    default_group_permissions: PermissionSetting | None
-    default_other_permissions: PermissionSetting | None
+    flags: fs.FlagSetting | None
+    user_permissions: fs.PermissionSetting
+    special_users_permissions: list[fs.SpecialUserPermission]
+    group_permissions: fs.PermissionSetting
+    special_groups_permissions: list[fs.SpecialGroupPermission]
+    mask: fs.PermissionSetting | None
+    other_permissions: fs.PermissionSetting
+    default_user_permissions: fs.PermissionSetting | None
+    default_special_users_permissions: list[fs.PermissionSetting]
+    default_group_permissions: fs.PermissionSetting | None
+    default_special_groups_permissions: list[fs.PermissionSetting]
+    default_mask: fs.PermissionSetting | None
+    default_other_permissions: fs.PermissionSetting | None
 
     @classmethod
     def from_getfacl_cmd_output(cls, cmd_output: str):
         """
-        Instantiates a :class: `ACLData` object from Linux getfacl output string
+        Instantiates a :class: `ACLData` object from Linux getfacl output
         :param cmd_output: Linux getfacl std out
         :return :class: `ACLData` object
         """
         kwargs = {}
-        for item in getfacl_output_items():
+        for item in osp.getfacl_output_items():
             matched_vals = re.findall(
                 item.regex, cmd_output, flags=re.MULTILINE
             )
@@ -89,7 +95,7 @@ class GetFaclResult:
         """
         return self._raw_std_out
 
-    def __str__(self):
+    def __repr__(self):
         """
         Special method used when passing :class: `GetFaclResult` to print()
         :return: :py:attr:`~_raw_std_out` with leading and trailing whitespace

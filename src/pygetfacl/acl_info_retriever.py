@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from data_containers import ACLData, GetFaclResult
-from subprocess_caller import SubProcessCaller
+import pygetfacl.data_containers as dc
+import pygetfacl.subprocess_caller as sc
 
 
 class ACLInfoRetriever:
@@ -20,21 +20,21 @@ class ACLInfoRetriever:
         else:
             raise TypeError
 
-    def getfacl(self) -> GetFaclResult:
+    def getfacl(self) -> dc.GetFaclResult:
         """
         Gets ACL info for self._path
         :return: a :class: `GetFaclResult` object composed of raw string output
         from a subprocess call to system getfacl, and a :class: `ACLData`
         object
         """
-        raw_output = SubProcessCaller(
+        raw_output = sc.SubProcessCaller(
             # -E option --> don't show effective permissions
             command=["getfacl", "-E", str(self._path)]
         ).call_with_stdout_capture()
 
-        acl_data = ACLData.from_getfacl_cmd_output(raw_output)
+        acl_data = dc.ACLData.from_getfacl_cmd_output(raw_output)
 
-        return GetFaclResult(raw_std_out=raw_output, acl_data=acl_data)
+        return dc.GetFaclResult(raw_std_out=raw_output, acl_data=acl_data)
 
 
 # for dev testing
@@ -42,5 +42,6 @@ if __name__ == "__main__":
     demo_path = str(Path(__file__).parent.parent.parent / "demo_local")
     my_info_retriever = ACLInfoRetriever(demo_path)
     result = my_info_retriever.getfacl()
-    print(result)
+    import pprint
+    pprint.pprint(result.acl_data)
 

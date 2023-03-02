@@ -1,5 +1,6 @@
 import subprocess
-from aclpath_exceptions import SubprocessException
+# from .aclpath_exceptions import SubprocessException
+import pygetfacl.aclpath_exceptions as ae
 
 
 class SubProcessCaller:
@@ -29,6 +30,6 @@ class SubProcessCaller:
             self._command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if subprocess_result.returncode != 0:
-            raise SubprocessException(subprocess_result)
+            raise ae.SubprocessException(subprocess_result)
 
         return subprocess_result.stdout.decode("utf-8")
