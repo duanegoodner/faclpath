@@ -1,67 +1,130 @@
-from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum, auto
 
-from .aclpath_exceptions import InvalidFileSetting
+
+def validate_bit_string(
+    bit_string: str,
+    all_bits_set_repr: str,
+    no_bits_set_repr: str,
+    required_length: int,
+):
+    assert len(bit_string) == required_length
+    assert len(all_bits_set_repr) == required_length
+    assert len(no_bits_set_repr) == required_length
+    assert all(
+        [
+            (bit_string[i] == all_bits_set_repr[i])
+            or (bit_string[i] == no_bits_set_repr[i])
+            for i in range(len(bit_string))
+        ]
+    )
 
 
-class FileSettingType(Enum):
+class FileSettingStringType(Enum):
     PERMISSIONS = auto()
     FLAGS = auto()
     NONE = auto()
 
 
-class FileSetting(ABC):
-    """
-    Abstract class representing a file setting permission. Implemented as
-    PermissionSetting or Mask
-    """
-    _vals_if_all_bits_set = {
-        FileSettingType.PERMISSIONS: "rwx",
-        FileSettingType.FLAGS: "sst",
-    }
-
-    _no_bits_set = "---"
-
-    def __init__(self, value: str):
-        self.value = value
-        self._validate()
+class PermissionSetting:
+    def __init__(self, r: bool, w: bool, x: bool):
+        self._r = r
+        self._w = w
+        self._x = x
 
     @property
-    @abstractmethod
-    def _all_bits_set(self) -> str:
-        ...
+    def r(self) -> bool:
+        return self._r
 
-    def _validate(self):
-        if (
-            (type(self.value) != str)
-            or (len(self.value) != 3)
-            or not all(
-                [
-                    (self.value[i] == self._all_bits_set[i])
-                    or (self.value[i] == self._no_bits_set[i])
-                    for i in range(len(self.value))
-                ]
-            )
-        ):
-            raise InvalidFileSetting(
-                self.value, self._all_bits_set, self._no_bits_set
-            )
-
-
-class PermissionSetting(FileSetting):
     @property
-    def _all_bits_set(self) -> str:
-        """
-        Returns: String representation of a PermissionSetting value when all
-        bits are set
-        """
-        return "rwx"
+    def w(self) -> bool:
+        return self._w
 
-
-class FlagSetting(FileSetting):
     @property
-    def _all_bits_set(self) -> str:
-        """
-        Returns: String representation of MaskSetting value when all bits are set
-        """
-        return "sst"
+    def x(self) -> bool:
+        return self._x
+
+    @classmethod
+    def from_string(cls, permission_string: str):
+        validate_bit_string(
+            bit_string=permission_string,
+            all_bits_set_repr="rwx",
+            no_bits_set_repr="---",
+            required_length=3,
+        )
+        r = permission_string[0] == "r"
+        w = permission_string[1] == "w"
+        x = permission_string[2] == "x"
+        return cls(r=r, w=w, x=x)
+
+
+def compute_effective_permissions(
+    base: PermissionSetting, mask: PermissionSetting
+):
+    return PermissionSetting(
+        r=(base.r and mask.r), w=(base.w and mask.w), x=(base.x and mask.x)
+    )
+
+
+class FlagSetting:
+    def __init__(
+        self, uid_is_set: bool, gid_is_set: bool, sticky_is_set: bool
+    ):
+        self._uid_is_set = uid_is_set
+        self._gid_is_set = gid_is_set
+        self._sticky_is_set = sticky_is_set
+
+    @classmethod
+    def from_string(cls, flag_string: str):
+        validate_bit_string(
+            bit_string=flag_string,
+            all_bits_set_repr="sst",
+            no_bits_set_repr="---",
+            required_length=3,
+        )
+        uid_is_set = flag_string[0] == "s"
+        gid_is_set = flag_string[1] == "s"
+        sticky_is_set = flag_string[2] == "t"
+        return cls(
+            uid_is_set=uid_is_set,
+            gid_is_set=gid_is_set,
+            sticky_is_set=sticky_is_set,
+        )
+
+    @property
+    def uid_is_set(self) -> bool:
+        return self._uid_is_set
+
+    @property
+    def gid_is_set(self):
+        return self._gid_is_set
+
+    @property
+    def sticky_is_set(self):
+        return self._sticky_is_set
+
+
+@dataclass
+class SpecialUserPermission:
+    username: str
+    permissions: PermissionSetting
+
+    @classmethod
+    def from_str_str_pair(cls, username: str, permission_string: str):
+        permission_setting = PermissionSetting.from_string(
+            permission_string=permission_string
+        )
+        return cls(username=username, permissions=permission_setting)
+
+
+@dataclass
+class SpecialGroupPermission:
+    group_name: str
+    permissions: PermissionSetting
+
+    @classmethod
+    def from_str_str_pair(cls, group_name: str, permission_string: str):
+        permission_setting = PermissionSetting.from_string(
+            permission_string=permission_string
+        )
+        return cls(group_name=group_name, permissions=permission_setting)

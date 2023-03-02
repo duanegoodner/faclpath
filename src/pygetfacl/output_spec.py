@@ -1,7 +1,14 @@
 from dataclasses import dataclass
+from typing import Callable
 
-from .aclpath_exceptions import ExcessRegexMatches, InsufficientRegexMatches
-from .file_setting import FileSettingType
+from aclpath_exceptions import ExcessRegexMatches, InsufficientRegexMatches
+from file_setting import (
+    FlagSetting,
+    PermissionSetting,
+    FileSettingStringType,
+    SpecialGroupPermission,
+    SpecialUserPermission,
+)
 
 
 @dataclass()
@@ -12,7 +19,7 @@ class ItemFromGetFacl:
     attribute: Name used in ACLData class
     regex: string regex used to extract info from sys getfacl output
     file_setting_type: Enum corresponding to concrete implementation of
-    FileSetting
+    FileSettingString
     required: bool indicating whether item must be present
     max_entries: int indicating max allowed items of this type in any data
     containers classes.
@@ -20,26 +27,18 @@ class ItemFromGetFacl:
 
     attribute: str
     regex: str
-    file_setting_type: FileSettingType
+    file_setting_type: FileSettingStringType
     required: bool
     max_entries: int | None
+    acl_data_type: (
+        Callable[..., str]
+        | Callable[..., FlagSetting]
+        | Callable[..., PermissionSetting]
+        | Callable[..., SpecialUserPermission]
+        | Callable[..., SpecialGroupPermission]
+    )
 
     def validate_matches(self, matched_groups: list[str]):
-        """
-        Checks if strings matched by regex meet output spec conditions.
-
-        Args:
-            matched_groups: list of strings matched by re.findall()
-
-        Returns:
-            None
-
-        Raises:
-            ExcessRegexMatches if number of matched groups exceeds value in
-            spec.
-            InsufficientRegexMatches if number of maatches less thatn #
-            require.
-        """
         if (self.max_entries is not None) and (
             len(matched_groups) > self.max_entries
         ):
@@ -49,17 +48,20 @@ class ItemFromGetFacl:
         if self.required and len(matched_groups) < 1:
             raise InsufficientRegexMatches(self.attribute, len(matched_groups))
 
+    def to_acl_constructor_format(self, matched_groups: list[str]):
+        if len(matched_groups) == 0:
+            return None
+        if (len(matched_groups) == 1) and (self.max_entries == 1):
+            return self.acl_data_type(matched_groups[0].strip())
+        else:
+            pairs = [item.split(":") for item in matched_groups]
+            assert all([len(pair) == 2 for pair in pairs])
+            return [
+                self.acl_data_type(name, permission)
+                for name, permission in pairs
+            ]
+
     def to_dict_entry(self, matched_groups: list[str]):
-        """
-        Converts strings matched by regex into dict that can be passed as
-        **kwargs to ACLData constructor.
-        Args:
-            matched_groups:
-
-        Returns: dictionary with structure that parallels ACLData object
-        constructor.
-
-        """
         if len(matched_groups) == 0:
             return None
         if (len(matched_groups) == 1) and (self.max_entries == 1):
@@ -81,85 +83,97 @@ def getfacl_output_items() -> list[ItemFromGetFacl]:
         ItemFromGetFacl(
             attribute="owning_user",
             regex="(?<=^# owner:).*$",
-            file_setting_type=FileSettingType.NONE,
+            file_setting_type=FileSettingStringType.NONE,
             required=True,
             max_entries=1,
+            acl_data_type=str,
         ),
         ItemFromGetFacl(
             attribute="owning_group",
             regex="(?<=^# group:).*$",
-            file_setting_type=FileSettingType.NONE,
+            file_setting_type=FileSettingStringType.NONE,
             required=True,
             max_entries=1,
+            acl_data_type=str,
         ),
         ItemFromGetFacl(
             attribute="flags",
             regex="(?<=^# flags:).*$",
-            file_setting_type=FileSettingType.FLAGS,
+            file_setting_type=FileSettingStringType.FLAGS,
             required=False,
             max_entries=1,
+            acl_data_type=FlagSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="user_permissions",
             regex="(?<=^user::).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=True,
             max_entries=1,
+            acl_data_type=PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="group_permissions",
             regex="(?<=^group::).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=True,
             max_entries=1,
+            acl_data_type=PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="other_permissions",
             regex="(?<=^other::).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=True,
             max_entries=1,
+            acl_data_type=PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="mask",
             regex="(?<=^mask::).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=False,
             max_entries=1,
+            acl_data_type=PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="default_user_permissions",
             regex="(?<=^default:user::).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=False,
             max_entries=1,
+            acl_data_type=PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="default_group_permissions",
             regex="(?<=^default:group::).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=False,
             max_entries=1,
+            acl_data_type=PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="default_other_permissions",
             regex="(?<=^default:other::).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=False,
             max_entries=1,
+            acl_data_type=PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="special_users_permissions",
             regex="(?<=^user:)(?!:).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=False,
             max_entries=None,
+            acl_data_type=SpecialUserPermission.from_str_str_pair,
         ),
         ItemFromGetFacl(
             attribute="special_groups_permissions",
             regex="(?<=^group:)(?!:).*$",
-            file_setting_type=FileSettingType.PERMISSIONS,
+            file_setting_type=FileSettingStringType.PERMISSIONS,
             required=False,
             max_entries=None,
+            acl_data_type=SpecialGroupPermission.from_str_str_pair,
         ),
     ]

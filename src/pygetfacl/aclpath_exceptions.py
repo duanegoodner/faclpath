@@ -65,7 +65,7 @@ class InsufficientRegexMatches(Exception):
         )
 
 
-class InvalidFileSetting(Exception):
+class InvalidFileSettingString(Exception):
     def __init__(self, value: any, all_bits_set: str, no_bits_set: str):
         self.value = value
         self.all_bits_set = all_bits_set

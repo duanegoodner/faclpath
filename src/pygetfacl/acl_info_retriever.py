@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from .data_containers import ACLData, GetFaclResult
-from .subprocess_caller import SubProcessCaller
+from data_containers import ACLData, GetFaclResult
+from subprocess_caller import SubProcessCaller
 
 
 class ACLInfoRetriever:

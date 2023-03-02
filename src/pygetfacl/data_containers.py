@@ -1,8 +1,13 @@
 import re
 from dataclasses import dataclass
 
-from .file_setting import FlagSetting, PermissionSetting
-from .output_spec import getfacl_output_items
+from file_setting import (
+    FlagSetting,
+    PermissionSetting,
+    SpecialGroupPermission,
+    SpecialUserPermission,
+)
+from output_spec import getfacl_output_items
 
 
 @dataclass
@@ -22,15 +27,16 @@ class ACLData:
     :param default_group_permissions: default:group::
     :param default_other_permissions: default:other::
     """
+
     owning_user: str
     owning_group: str
-    flags: str | None
+    flags: FlagSetting | None
+    mask: PermissionSetting | None
     user_permissions: PermissionSetting
     group_permissions: PermissionSetting
     other_permissions: PermissionSetting
-    mask: FlagSetting | None
-    special_users_permissions: dict[str, PermissionSetting]
-    special_groups_permissions: dict[str, PermissionSetting]
+    special_users_permissions: list[SpecialUserPermission]
+    special_groups_permissions: list[SpecialGroupPermission]
     default_user_permissions: PermissionSetting | None
     default_group_permissions: PermissionSetting | None
     default_other_permissions: PermissionSetting | None
@@ -48,7 +54,10 @@ class ACLData:
                 item.regex, cmd_output, flags=re.MULTILINE
             )
             item.validate_matches(matched_vals)
-            kwargs[item.attribute] = item.to_dict_entry(matched_vals)
+            # kwargs[item.attribute] = item.to_dict_entry(matched_vals)
+            kwargs[item.attribute] = item.to_acl_constructor_format(
+                matched_vals
+            )
         return cls(**kwargs)
 
 
