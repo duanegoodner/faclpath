@@ -59,10 +59,10 @@ class ItemFromGetFacl:
         else:
             pairs = [item.split(":") for item in matched_groups]
             assert all([len(pair) == 2 for pair in pairs])
-            return [
-                self.acl_data_type(name, permission)
+            return {
+                name: self.acl_data_type(permission)
                 for name, permission in pairs
-            ]
+            }
 
     def to_dict_entry(self, matched_groups: list[str]):
         if len(matched_groups) == 0:
@@ -116,7 +116,7 @@ def getfacl_output_items() -> list[ItemFromGetFacl]:
             regex="(?<=^user:)(?!:).*$",
             required=False,
             max_entries=None,
-            acl_data_type=fs.SpecialUserPermission.from_str_str_pair,
+            acl_data_type=fs.PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="group_permissions",
@@ -130,7 +130,7 @@ def getfacl_output_items() -> list[ItemFromGetFacl]:
             regex="(?<=^group:)(?!:).*$",
             required=False,
             max_entries=None,
-            acl_data_type=fs.SpecialGroupPermission.from_str_str_pair,
+            acl_data_type=fs.PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="mask",
@@ -158,7 +158,7 @@ def getfacl_output_items() -> list[ItemFromGetFacl]:
             regex="(?<=^default:user:)(?!:).*$",
             required=False,
             max_entries=None,
-            acl_data_type=fs.SpecialUserPermission.from_str_str_pair,
+            acl_data_type=fs.PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="default_group_permissions",
@@ -172,7 +172,7 @@ def getfacl_output_items() -> list[ItemFromGetFacl]:
             regex="(?<=^default:group:)(?!:).*$",
             required=False,
             max_entries=None,
-            acl_data_type=fs.SpecialGroupPermission.from_str_str_pair,
+            acl_data_type=fs.PermissionSetting.from_string,
         ),
         ItemFromGetFacl(
             attribute="default_mask",

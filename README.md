@@ -16,7 +16,7 @@ $ pip install git+https://github.com/duanegoodner/pygetfacl
 ## Basic Usage
 
 > **Note**
-> If you want to test pygetfacl in Docker, you can build and run a container using files provided in the `demo_docker` directory. From the pygetfacl project root directory, run the following terminal commands to build/run the container and start a `bash` shell inside it. (Pygetfacl is installed during the image build process)
+> If you want to test pygetfacl in Docker, you can build and run a container using files provided in the `demo_docker` directory. From the pygetfacl project root directory, run the following terminal commands to build/run the container and start a `bash` shell inside it. Pygetfacl is installed during the image build process.
 >
 > ```shell
 > $ docker build ./demo_docker -t pygetfacl_demo
@@ -29,8 +29,8 @@ From the command line (either in your local environment, or a Docker container),
 $ mkdir test_dir \
   && sudo useradd user_b \
   && setfacl -bn test_dir \
-  && setfacl -d -m g::rwx test_dir \
   && setfacl -m u:user_b:rwx test_dir \
+  && chmod g+s test_dir \
   && python
 ```
 
@@ -40,71 +40,74 @@ Then, in the Python interpreter:
 >>> retriever = ACLInfoRetriever("test_dir")  
 >>> getfacl_result = retriever.getfacl()
 ```
-The value stored in getfacl_result is a GetFaclResult with two public properties.
-* GetFaclResult.raw_std_out returns ACL information in the same string format provided by the Linux system getfacl.
-* GetFaclResult.acl_data returns the same information in a structured ACLData object.
-Let's take a look at both formats:
-```pycon
->>> import pprint
->>> pprint.pprint(getfacl_result.raw_std_out)
-('# file: test_dir\n'
- '# owner: user_a\n'
- '# group: user_a\n'
- '# flags: -s-\n'
- 'user::rwx\n'
- 'user:user_b:rwx\n'
- 'group::rwx\n'
- 'group:group_x:rwx\n'
- 'mask::r--\n'
- 'other::rwx\n'
- 'default:user::rwx\n'
- 'default:user:user_b:rwx\n'
- 'default:group::rwx\n'
- 'default:group:group_x:rwx\n'
- 'default:mask::r--\n'
- 'default:other::rwx\n'
- '\n')
 
+ACL info for path `test_dir` can now be accessed via the `.acl_data` member of `getfacl_result`:
+```
+>>> import pprint
 >>> pprint.pprint(getfacl_result.acl_data)
 ACLData(owning_user='user_a',
         owning_group='user_a',
-        flags= (uid=False, gid=True, sticky=False),
-        user_permissions= (r=True, w=True, x=True),
-        special_users_permissions=[
-            SpecialUserPermission(
-                username='user_b',permissions= (r=True, w=True, x=True))],
-        group_permissions= (r=True, w=True, x=True),
-        special_groups_permissions=[
-            pecialGroupPermission(
-                group_name='group_x', permissions= (r=True, w=True, x=True)
-                )],
-        mask= (r=True, w=False, x=False),
-        other_permissions= (r=True, w=True, x=True),
-        default_user_permissions= (r=True, w=True, x=True),
-        default_special_users_permissions=[
-            SpecialUserPermission(
-                username='user_b', permissions= (r=True, w=True, x=True))],
-        default_group_permissions= (r=True, w=True, x=True),
-        default_special_groups_permissions=[
-            SpecialGroupPermission(
-                group_name='group_x', permissions= (r=True, w=True, x=True))],
-        default_mask= (r=True, w=False, x=False),
-        default_other_permissions= (r=True, w=True, x=True))
-
+        flags=-s-,
+        user_permissions=rwx,
+        special_users_permissions={'user_b': rwx},
+        group_permissions=r-x,
+        special_groups_permissions=None,
+        mask=rwx,
+        other_permissions=r-x,
+        default_user_permissions=None,
+        default_special_users_permissions=None,
+        default_group_permissions=None,
+        default_special_groups_permissions=None,
+        default_mask=None,
+        default_other_permissions=None
 ```
 
-With ACL info stored in an ACLData object, our Python program can easily access it.
+
 ```pycon
->>> test_user_permission = (
-getfacl_result.acl_data.special_users_permissions.get('user_b')
-)
->>> if test_user_permission == 'rwx':
-        print('Oh good. Our test user has full access to the test directory.')
+>>> acl_data = getfacl_result.acl_data
+>>> if acl_data.special_users_permissions.get("user_b").w:
+        print('Oh good. user_b has write access to test_dir.')
 ... 
-Oh good. Our test user has full access to the test directory.
+Oh good. user_b has write access to test_dir.
 ```
+
+## A Few More Details
+
+The ACLInfoRetriever.get() method returns a GetFaclResult object which has two public properties: **.raw_std_out** and **.acl_data**
+
+The **.raw_std_out** property of a GetFaclResult object returns ACL information in the same string format provided by the Linux system getfacl:
+
+```pycon
+>>> print(getfacl_result.raw_std_out)
+# file: test_dir
+# owner: user_a
+# group: user_a
+# flags: -s-
+user::rwx
+user:user_b:rwx
+group::r-x
+mask::rwx
+other::r-x
+```
+
+The **.acl_data** property returns the same info in an ACLData object:
+
+
+
+> **Note**
+> Although permissions and flags in an ACLData object appear in the usual string form when printed (e.g. `rwx` or `sst`), each bit is stored as private boolean data member that can be accessed by a public getter.
+>
+> ```pycon
+> >>> g_permissions = getfacl_result.acl_data.group_permissions
+> >>> vars(g_permissions)
+> {'_r': True, '_w': False, '_x': True}
+> >>> print(
+> f"r = {g_permissions.r}, w = {g_permissions.w}, x = {g_permissions.x}")
+> r = True, w = False, x = True
+> ```
 
 ## Primary Use Cases
+
 *Pygetfacl* may be useful any time you want to obtain a file path's ACL information (in a form that is both structured and human-readable) from within a Python program.
 
 
