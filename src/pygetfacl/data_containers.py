@@ -1,3 +1,4 @@
+import pprint
 import re
 from dataclasses import dataclass
 
@@ -110,7 +111,7 @@ class EffectivePermissions:
         self.default_other = acl_data.default_other
 
     def __repr__(self):
-        return str(vars(self))
+        return "\n".join([f"{key}: {val}" for key, val in vars(self).items()])
 
 
 class GetFaclResult:
