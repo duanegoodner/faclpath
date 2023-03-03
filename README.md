@@ -47,74 +47,56 @@ $ mkdir test_dir \
   && python
 ```
 
-Then, in the Python interpreter: 
+Then, in the Python interpreter, run the following commands to get a feel for `pygetfacl.getfacl()` and the `ACLData` object that it returns: 
 ```pycon
->>> from pygetfacl import ACLInfoRetriever
->>> retriever = ACLInfoRetriever("test_dir")  
->>> getfacl_result = retriever.getfacl()
-```
-
-The call to `retriever.getfacl()` returns a **GetFaclResult** object. An **ACLData** object containing ACL info for path `test_dir` can be accessed via `.acl_data` member of the **GetFaclResult** object:
-```
+>>> import pygetfacl
+>>> acl_data = pygetfacl.getfacl("test_dir")
 >>> import pprint
->>> pprint.pprint(getfacl_result.acl_data)
+>>> pprint.pprint(acl_data)
 ACLData(owning_user='user_a',
         owning_group='user_a',
         flags=-s-,
-        user_permissions=rwx,
-        special_users_permissions={'user_b': rwx},
-        group_permissions=r-x,
-        special_groups_permissions=None,
+        user=rwx,
+        special_users={'user_b': rwx},
+        group=r-x,
+        special_groups=None,
         mask=rwx,
-        other_permissions=r-x,
-        default_user_permissions=None,
-        default_special_users_permissions=None,
-        default_group_permissions=None,
-        default_special_groups_permissions=None,
+        other=r-x,
+        default_user=None,
+        default_special_users=None,
+        default_group=None,
+        default_special_groups=None,
         default_mask=None,
-        default_other_permissions=None
+        default_other=None)
 ```
 
+The effective permissions can be accessed via the `.effective_permissions` property of the ACLData object returned by `pygetfacl.getfacl`.
 
-
-## A Few More Details
-
-
-
-#### Permissions and flags are stored a booleans in an ACLData object
-
-Permissions and flags in an ACLData have \__repr__ methods defined so they print appear in the usual string form when printed (e. g. `rwx` or `sst`), but the value of each bit is stored as a boolean. 
-
-```pycon
->>> acl_data = getfacl_result.acl_data
->>> user_b_permissions = acl_data.special_users_permissions.get("user_b")
->>> print(f"r = {user_b_permissions.r}, w = {user_b_permissions.w}, x = {user_b_permissions.x}")
-r = True, w = False, x = True
->>> if user_b_permissions.w:
-...     print("Oh good. user_b has write access to test_dir")
-... 
-Oh good. user_b has write access to test_dir
+```
+>>> print(acl_data.effective_permissions)
+user: rwx
+special_users: {'user_b': rwx}
+group: r-x
+special_groups: None
+other: r-x
+default_user: None
+default_special_users: None
+default_group: None
+default_special_groups: None
+default_other: None
 ```
 
-
-
-#### Viewing raw output from Linux `getfacl` command
-
-An **ACLInfoRetriever**'s `.get()` method returns a GetFaclResult object which has two public properties: **.raw_std_out** and **.acl_data**
-
-The **.raw_std_out** property of a GetFaclResult object returns ACL information in the same string format provided by the Linux system getfacl:
+Permissions and flags in an ACLData object have \__repr__ methods defined so they print in the usual string form when printed (e. g. `rwx` or `sst`), but the value of each bit is stored as a boolean in a private data member that can be accessed with a public getter.
 
 ```pycon
->>> print(getfacl_result.raw_std_out)
-# file: test_dir
-# owner: user_a
-# group: user_a
-# flags: -s-
-user::rwx
-user:user_b:rwx
-group::r-x
-mask::rwx
-other::r-x
+>>> special_user_effective = acl_data.effective_permissions.special_users
+>>> user_b_effective = special_user_effective.get("user_b")
+>>> print(user_b_effective)
+rwx
+>>> vars(user_b_effective)
+{'_r': True, '_w': True, '_x': True}
+>>> print(f"user_b effective permissions: r = {user_b_effective.r}, w = {user_b_effective.w}, x = {user_b_effective.x}")
+user_b effective permissions: r = True, w = True, x = True
 ```
 
 

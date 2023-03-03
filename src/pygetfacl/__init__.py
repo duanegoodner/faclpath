@@ -1,1 +1,1 @@
-from .acl_info_retriever import ACLInfoRetriever
+from pygetfacl.pygetfacl import getfacl, getfacl_raw

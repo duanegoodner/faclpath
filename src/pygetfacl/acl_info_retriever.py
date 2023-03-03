@@ -20,7 +20,7 @@ class ACLInfoRetriever:
         else:
             raise TypeError
 
-    def getfacl(self) -> dc.GetFaclResult:
+    def call_getfacl(self) -> dc.GetFaclResult:
         """
         Gets ACL info for self._path
         :return: a :class: `GetFaclResult` object composed of raw string output
@@ -41,7 +41,7 @@ class ACLInfoRetriever:
 if __name__ == "__main__":
     demo_path = str(Path(__file__).parent.parent.parent / "demo_local")
     my_info_retriever = ACLInfoRetriever(demo_path)
-    result = my_info_retriever.getfacl()
+    result = my_info_retriever.call_getfacl()
     import pprint
     pprint.pprint(result.acl_data)
 
