@@ -97,7 +97,7 @@ class EffectivePermissions:
                 base=acl_data.default_group, mask=acl_data.default_mask
             )
         )
-        self.default_spacial_groups = (
+        self.default_special_groups = (
             None
             if not acl_data.default_special_groups
             else {
@@ -108,6 +108,9 @@ class EffectivePermissions:
             }
         )
         self.default_other = acl_data.default_other
+
+    def __repr__(self):
+        return str(vars(self))
 
 
 class GetFaclResult:
