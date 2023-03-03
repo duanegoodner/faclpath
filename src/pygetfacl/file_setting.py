@@ -60,6 +60,10 @@ class PermissionSetting:
 def compute_effective_permissions(
     base: PermissionSetting, mask: PermissionSetting
 ):
+    if base is None:
+        return None
+    if mask is None:
+        return base
     return PermissionSetting(
         r=(base.r and mask.r), w=(base.w and mask.w), x=(base.x and mask.x)
     )

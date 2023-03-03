@@ -1,51 +1,70 @@
 import re
-from dataclasses import dataclass
-
-# from .file_setting import (
-#     FlagSetting,
-#     PermissionSetting,
-#     SpecialGroupPermission,
-#     SpecialUserPermission,
-# )
-# from .output_spec import getfacl_output_items
 
 import pygetfacl.file_setting as fs
 import pygetfacl.output_spec as osp
 
 
-@dataclass
+# not using @dataclass b/c want to calc effective permissions in constructor
 class ACLData:
-    """
-    A dataclass ACL info. Each item corresponds to output from Linux gefacl
-    :param owning_user: # owner:
-    :param owning_group: # group:
-    :param flags: # flags:
-    :param user_permissions: user::
-    :param group_permissions: group::
-    :param other_permissions: other::
-    :param mask: mask::
-    :param special_users_permissions: user:<username>:
-    :param special_groups_permissions: group:<groupname>:
-    :param default_user_permissions: default:user::
-    :param default_group_permissions: default:group::
-    :param default_other_permissions: default:other::
-    """
-
-    owning_user: str
-    owning_group: str
-    flags: fs.FlagSetting | None
-    user_permissions: fs.PermissionSetting
-    special_users_permissions: list[fs.SpecialUserPermission]
-    group_permissions: fs.PermissionSetting
-    special_groups_permissions: list[fs.SpecialGroupPermission]
-    mask: fs.PermissionSetting | None
-    other_permissions: fs.PermissionSetting
-    default_user_permissions: fs.PermissionSetting | None
-    default_special_users_permissions: list[fs.PermissionSetting]
-    default_group_permissions: fs.PermissionSetting | None
-    default_special_groups_permissions: list[fs.PermissionSetting]
-    default_mask: fs.PermissionSetting | None
-    default_other_permissions: fs.PermissionSetting | None
+    def __init__(
+        self,
+        owning_user: str,
+        owning_group: str,
+        flags: fs.FlagSetting,
+        user: fs.PermissionSetting,
+        special_users: dict[str, fs.PermissionSetting],
+        group: fs.PermissionSetting,
+        special_groups: dict[str, fs.PermissionSetting],
+        mask: fs.PermissionSetting,
+        other: fs.PermissionSetting,
+        default_user: fs.PermissionSetting,
+        default_special_users: dict[str, fs.PermissionSetting],
+        default_group: fs.PermissionSetting,
+        default_special_groups: dict[str, fs.PermissionSetting],
+        default_mask: fs.PermissionSetting,
+        default_other: fs.PermissionSetting,
+    ):
+        self.owning_user = owning_user
+        self.owning_group = owning_group
+        self.flags = flags
+        self.user = user
+        self.special_users = special_users
+        self.group = group
+        self.special_groups = special_groups
+        self.mask = mask
+        self.other = other
+        self.default_user = default_user
+        self.default_special_users = default_special_users
+        self.default_group = default_group
+        self.default_special_groups = default_special_groups
+        self.default_mask = default_mask
+        self.default_other = default_other
+        self.special_users_effective = None if not special_users else {
+            user: fs.compute_effective_permissions(base=permission, mask=mask)
+            for user, permission in special_users.items()
+        }
+        self.group_effective = None if not group else fs.compute_effective_permissions(
+            base=group, mask=mask
+        )
+        self.special_groups_effective = None if not special_groups else {
+            group: fs.compute_effective_permissions(base=permission, mask=mask)
+            for group, permission in special_groups.items()
+        }
+        self.default_special_users_effective = None if not default_special_users else {
+            user: fs.compute_effective_permissions(
+                base=permission, mask=default_mask
+            )
+            for user, permission in default_special_users.items()
+        }
+        self.default_group_effective = None if not default_group else fs.compute_effective_permissions(
+            base=default_group, mask=default_mask
+        )
+        self.default_special_groups_effective = None if not default_special_groups else {
+            group: fs.compute_effective_permissions(
+                base=permission, mask=default_mask
+            )
+            for group, permission in default_special_groups.items()
+        }
 
     @classmethod
     def from_getfacl_cmd_output(cls, cmd_output: str):
