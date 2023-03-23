@@ -20,28 +20,29 @@ class ACLInfoRetriever:
         else:
             raise TypeError
 
-    def call_getfacl(self) -> dc.GetFaclResult:
+    def getfacl_raw(self) -> str:
+        return sc.SubProcessCaller(
+            # -E option --> don't show effective permissions
+            command=["getfacl", "-E", str(self._path)]
+        ).call_with_stdout_capture()
+
+    def getfacl(self) -> dc.GetFaclResult:
         """
         Gets ACL info for self._path
         :return: a :class: `GetFaclResult` object composed of raw string output
         from a subprocess call to system getfacl, and a :class: `ACLData`
         object
         """
-        raw_output = sc.SubProcessCaller(
-            # -E option --> don't show effective permissions
-            command=["getfacl", "-E", str(self._path)]
-        ).call_with_stdout_capture()
+        raw_output = self.getfacl_raw()
 
         acl_data = dc.ACLData.from_getfacl_cmd_output(raw_output)
 
         return dc.GetFaclResult(raw_std_out=raw_output, acl_data=acl_data)
 
 
-# for dev testing
-if __name__ == "__main__":
-    demo_path = str(Path(__file__).parent.parent.parent / "demo_local")
-    my_info_retriever = ACLInfoRetriever(demo_path)
-    result = my_info_retriever.call_getfacl()
-    import pprint
-    pprint.pprint(result.acl_data)
+def getfacl_raw(path: str | Path):
+    return ACLInfoRetriever(path).getfacl_raw()
 
+
+def getfacl(path: str | Path):
+    return ACLInfoRetriever(path).getfacl()

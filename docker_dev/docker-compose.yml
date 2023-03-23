@@ -1,0 +1,38 @@
+version: '3.8'
+
+secrets:
+  jetbrains_user_pubkey:
+    file: ${JETBRAINS_USER_PUBKEY}
+
+services:
+  pygetfacl:
+    image: ${IMAGE_NAME}
+    secrets:
+      - jetbrains_user_pubkey
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+      args:
+        - PRIMARY_USER=${PRIMARY_USER}
+        - JETBRAINS_USER=${JETBRAINS_USER}
+        - WORK_GROUP=${WORK_GROUP}
+        - CONTAINER_DEVSPACE=${CONTAINER_DEVSPACE}
+        - CONTAINER_PROJECT_DIR=${CONTAINER_PROJECT_DIR}
+        - CONTAINER_SRC_DIR=${CONTAINER_SRC_DIR}
+      secrets:
+        - jetbrains_user_pubkey
+    container_name: ${CONTAINER_NAME}
+    entrypoint:
+       [
+        "/bin/bash",
+        "/usr/local/entrypoints/jbs/main.sh"
+      ]
+    volumes:
+      - ${LOCAL_PROJECT_DIR}:${CONTAINER_PROJECT_DIR}
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "127.0.0.1:${CONTAINER_SSH_PORT}:22"
+    init: true
+    stdin_open: true
+    tty: true
+

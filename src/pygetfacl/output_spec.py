@@ -13,7 +13,7 @@ import pygetfacl.aclpath_exceptions as ae
 import pygetfacl.file_setting as fs
 
 
-@dataclass()
+@dataclass
 class ItemFromGetFacl:
     """
     Specification for piece of information returned by a line in system

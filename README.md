@@ -114,12 +114,6 @@ user_b effective permissions: r = True, w = True, x = True
 
 ## Project Status
 
-*Pygetfacl* is a work-in-progress. Roadmap (as of March 1, 2023):
-
-* Use current version (0.0.1) as a dependency in other projects over the next ~2 weeks.
-
-  * During this time, no changes to project except docstring cleanup (change from Google format to reST) and improving tests.
-
-* Based on use experience identify and implement areas for improvement. ETA for 0.0.2 release: March 14, 2023. 
+*Pygetfacl* is a work-in-progress. Will use it as a dependency in other projects and modify as improvement opportunities arise.
 
   
