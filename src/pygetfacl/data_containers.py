@@ -43,13 +43,11 @@ class ACLData:
                 item.regex, cmd_output, flags=re.MULTILINE
             )
             item.validate_matches(matched_vals)
-            # kwargs[item.attribute] = item.to_dict_entry(matched_vals)
             kwargs[item.attribute] = item.to_acl_constructor_format(
                 matched_vals
             )
         return cls(**kwargs)
 
-    @property
     def effective_permissions(self):
         return EffectivePermissions(self)
 
@@ -91,7 +89,7 @@ class EffectivePermissions:
                 group: fs.compute_effective_permissions(
                     base=permission, mask=acl_data.default_mask
                 )
-                for group, permission in acl_data.special_groups.items()
+                for group, permission in acl_data.default_special_groups.items()
             }
 
         self.default_other = acl_data.default_other
@@ -100,38 +98,3 @@ class EffectivePermissions:
         return "\n".join([f"{key}: {val}" for key, val in vars(self).items()])
 
 
-class GetFaclResult:
-    """
-    Container for :class: `ACLData` and corresponding Linux getfacl std out
-    """
-
-    def __init__(self, raw_std_out: str, acl_data: ACLData):
-        """
-        Constructor
-        :param raw_std_out: string obtained from Linux getfacl std out
-        :param acl_data: :class: `ACLData` object
-        """
-        self._acl_data = acl_data
-        self._raw_std_out = raw_std_out
-
-    @property
-    def acl_data(self) -> ACLData:
-        """
-        :return: :py:attr:`~_acl_data`
-        """
-        return self._acl_data
-
-    @property
-    def raw_std_out(self):
-        """
-        :return: :py:attr:`~_raw_std_out`
-        """
-        return self._raw_std_out
-
-    def __repr__(self):
-        """
-        Special method used when passing :class: `GetFaclResult` to print()
-        :return: :py:attr:`~_raw_std_out` with leading and trailing whitespace
-        removed
-        """
-        return self._raw_std_out.strip()

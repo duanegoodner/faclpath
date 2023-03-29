@@ -23,15 +23,14 @@ class ACLInfoRetriever:
     def getfacl_raw(self) -> str:
         return sc.SubProcessCaller(
             # -E option --> don't show effective permissions
+            # (calc'ing ep based on mask easier than parsing)
             command=["getfacl", "-E", str(self._path)]
         ).call_with_stdout_capture()
 
     def getfacl(self) -> dc.ACLData:
         """
         Gets ACL info for self._path
-        :return: a :class: `GetFaclResult` object composed of raw string output
-        from a subprocess call to system getfacl, and a :class: `ACLData`
-        object
+        :return: a :class: `ACLData` object
         """
         raw_output = self.getfacl_raw()
 

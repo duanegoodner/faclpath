@@ -1,3 +1,4 @@
+from pygetfacl.aclpath_exceptions import InvalidFileSettingString
 from dataclasses import dataclass
 
 
@@ -7,16 +8,27 @@ def validate_bit_string(
     no_bits_set_repr: str,
     required_length: int,
 ):
-    assert len(bit_string) == required_length
-    assert len(all_bits_set_repr) == required_length
-    assert len(no_bits_set_repr) == required_length
-    assert all(
-        [
-            (bit_string[i] == all_bits_set_repr[i])
-            or (bit_string[i] == no_bits_set_repr[i])
-            for i in range(len(bit_string))
-        ]
-    )
+    if (
+        (not len(bit_string) == required_length)
+        or (not len(all_bits_set_repr) == required_length)
+        or (not len(no_bits_set_repr) == required_length)
+        or (
+            not all(
+                [
+                    (bit_string[i] == all_bits_set_repr[i])
+                    or (bit_string[i] == no_bits_set_repr[i])
+                    for i in range(len(bit_string))
+                ]
+            )
+        )
+    ):
+        raise InvalidFileSettingString(
+            value=bit_string,
+            all_bits_set=all_bits_set_repr,
+            no_bits_set=no_bits_set_repr,
+        )
+    # except AssertionError:
+    #     raise InvalidFileSettingString
 
 
 class PermissionSetting:
@@ -24,6 +36,11 @@ class PermissionSetting:
         self._r = r
         self._w = w
         self._x = x
+
+    def __eq__(self, other):
+        return all(
+            [self._r == other.r, self._w == other.w, self._x == other.x]
+        )
 
     def __repr__(self):
         r_char = "r" if self._r else "-"
@@ -70,9 +87,7 @@ def compute_effective_permissions(
 
 
 class FlagSetting:
-    def __init__(
-        self, uid: bool, gid: bool, sticky: bool
-    ):
+    def __init__(self, uid: bool, gid: bool, sticky: bool):
         self._uid = uid
         self._gid = gid
         self._sticky = sticky
