@@ -24,6 +24,8 @@ class ACLData:
     default_special_groups: dict[str, fs.PermissionSetting]
     default_mask: fs.PermissionSetting
     default_other: fs.PermissionSetting
+    raw_system_output: str=""
+
 
     @classmethod
     def from_getfacl_cmd_output(cls, cmd_output: str):
@@ -32,7 +34,7 @@ class ACLData:
         :param cmd_output: Linux getfacl std out
         :return :class: `ACLData` object
         """
-        kwargs = {}
+        kwargs = {"raw_system_output": cmd_output}
         for item in osp.getfacl_output_items():
             matched_vals = re.findall(
                 item.regex, cmd_output, flags=re.MULTILINE

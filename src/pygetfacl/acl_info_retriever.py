@@ -26,7 +26,7 @@ class ACLInfoRetriever:
             command=["getfacl", "-E", str(self._path)]
         ).call_with_stdout_capture()
 
-    def getfacl(self) -> dc.GetFaclResult:
+    def getfacl(self) -> dc.ACLData:
         """
         Gets ACL info for self._path
         :return: a :class: `GetFaclResult` object composed of raw string output
@@ -35,14 +35,12 @@ class ACLInfoRetriever:
         """
         raw_output = self.getfacl_raw()
 
-        acl_data = dc.ACLData.from_getfacl_cmd_output(raw_output)
-
-        return dc.GetFaclResult(raw_std_out=raw_output, acl_data=acl_data)
+        return dc.ACLData.from_getfacl_cmd_output(raw_output)
 
 
-def getfacl_raw(path: str | Path):
+def getfacl_raw(path: str | Path) -> str:
     return ACLInfoRetriever(path).getfacl_raw()
 
 
-def getfacl(path: str | Path):
+def getfacl(path: str | Path) -> dc.ACLData:
     return ACLInfoRetriever(path).getfacl()
