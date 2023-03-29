@@ -1,6 +1,6 @@
 import pprint
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pygetfacl.file_setting as fs
 import pygetfacl.output_spec as osp
@@ -13,19 +13,22 @@ class ACLData:
     owning_group: str
     flags: fs.FlagSetting
     user: fs.PermissionSetting
-    special_users: dict[str, fs.PermissionSetting]
     group: fs.PermissionSetting
-    special_groups: dict[str, fs.PermissionSetting]
     mask: fs.PermissionSetting
     other: fs.PermissionSetting
     default_user: fs.PermissionSetting
-    default_special_users: dict[str, fs.PermissionSetting]
     default_group: fs.PermissionSetting
-    default_special_groups: dict[str, fs.PermissionSetting]
     default_mask: fs.PermissionSetting
     default_other: fs.PermissionSetting
     raw_system_output: str=""
-
+    special_users: dict[str, fs.PermissionSetting] = field(
+        default_factory=lambda: {})
+    special_groups: dict[str, fs.PermissionSetting] = field(
+        default_factory=lambda: {})
+    default_special_users: dict[str, fs.PermissionSetting] = field(
+        default_factory=lambda: {})
+    default_special_groups: dict[str, fs.PermissionSetting] = field(
+        default_factory=lambda: {})
 
     @classmethod
     def from_getfacl_cmd_output(cls, cmd_output: str):
@@ -54,62 +57,43 @@ class ACLData:
 class EffectivePermissions:
     def __init__(self, acl_data: ACLData):
         self.user = acl_data.user
-        self.special_users = (
-            None
-            if not acl_data.special_users
-            else {
+        self.special_users = {
                 user: fs.compute_effective_permissions(
                     base=permission, mask=acl_data.mask
                 )
                 for user, permission in acl_data.special_users.items()
             }
-        )
-        self.group = (
-            None
-            if not acl_data.group
-            else fs.compute_effective_permissions(
+        self.group = fs.compute_effective_permissions(
                 base=acl_data.group, mask=acl_data.mask
             )
-        )
-        self.special_groups = (
-            None
-            if not acl_data.special_groups
-            else {
+
+        self.special_groups = {
                 user: fs.compute_effective_permissions(
                     base=permission, mask=acl_data.mask
                 )
                 for user, permission in acl_data.special_groups.items()
             }
-        )
+
         self.other = acl_data.other
         self.default_user = acl_data.default_user
-        self.default_special_users = (
-            None
-            if not acl_data.default_special_users
-            else {
+        self.default_special_users = {
                 user: fs.compute_effective_permissions(
                     base=permission, mask=acl_data.default_mask
                 )
                 for user, permission in acl_data.default_special_users.items()
             }
-        )
-        self.default_group = (
-            None
-            if not acl_data.default_group
-            else fs.compute_effective_permissions(
+
+        self.default_group = fs.compute_effective_permissions(
                 base=acl_data.default_group, mask=acl_data.default_mask
             )
-        )
-        self.default_special_groups = (
-            None
-            if not acl_data.default_special_groups
-            else {
+
+        self.default_special_groups = {
                 group: fs.compute_effective_permissions(
                     base=permission, mask=acl_data.default_mask
                 )
                 for group, permission in acl_data.special_groups.items()
             }
-        )
+
         self.default_other = acl_data.default_other
 
     def __repr__(self):
