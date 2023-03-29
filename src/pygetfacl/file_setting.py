@@ -25,6 +25,13 @@ class PermissionSetting:
         self._w = w
         self._x = x
 
+    def __eq__(self, other):
+        return all([
+            self._r == other.r,
+            self._w == other.w,
+            self._x == other.x
+        ])
+
     def __repr__(self):
         r_char = "r" if self._r else "-"
         w_char = "w" if self._w else "-"

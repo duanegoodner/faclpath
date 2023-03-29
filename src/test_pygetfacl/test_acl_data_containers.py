@@ -1,7 +1,8 @@
 import os
 import pytest
 import subprocess
-from pygetfacl.data_containers import ACLData, GetFaclResult
+from pygetfacl.data_containers import ACLData, EffectivePermissions
+import pygetfacl.file_setting as fs
 
 
 @pytest.fixture
@@ -24,6 +25,11 @@ def example_system_getfacl_result():
 
 
 @pytest.fixture
+def example_acl_data(example_system_getfacl_result):
+    return ACLData.from_getfacl_cmd_output(example_system_getfacl_result)
+
+
+@pytest.fixture
 def temp_dir_with_some_facl_settings(tmp_path):
     my_dir = tmp_path
     subprocess.check_call(["setfacl", "-bn", str(my_dir)])
@@ -43,45 +49,28 @@ class TestACLData:
         assert my_acl_data.owning_user == "user_a"
         assert my_acl_data.owning_group == "user_a"
         assert my_acl_data.flags is None
-        assert my_acl_data.user_permissions == "rwx"
-        assert my_acl_data.group_permissions == "r-x"
-        assert my_acl_data.other_permissions == "r-x"
-        assert my_acl_data.mask == "rwx"
-        assert my_acl_data.special_users_permissions == {
-            "pygetfacl_test_user": "rwx"
+        # compare against str(PermissionSetting) when not part of dict or list
+        assert str(my_acl_data.user) == "rwx"
+        assert str(my_acl_data.group) == "r-x"
+        assert str(my_acl_data.other) == "r-x"
+        assert str(my_acl_data.mask) == "rwx"
+        assert my_acl_data.special_users == {
+            "pygetfacl_test_user": fs.PermissionSetting(r=True, w=True, x=True)
         }
-        assert my_acl_data.special_groups_permissions == {
-            "pygetfacl_test_group": "rw-"
+        assert my_acl_data.special_groups == {
+            "pygetfacl_test_group": fs.PermissionSetting(
+                r=True, w=True, x=False
+            )
         }
-        assert my_acl_data.default_user_permissions == "rwx"
-        assert my_acl_data.default_group_permissions == "rwx"
-        assert my_acl_data.default_other_permissions == "r-x"
+        assert str(my_acl_data.default_user) == "rwx"
+        assert str(my_acl_data.default_group) == "rwx"
+        assert str(my_acl_data.default_other) == "r-x"
 
 
-class TestGetFaclResult:
-    def test_from_getfacl_cmd_output(self, example_system_getfacl_result):
-        my_acl_data = ACLData.from_getfacl_cmd_output(
-            example_system_getfacl_result
-        )
-        my_get_facl_result = GetFaclResult(
-            raw_std_out=example_system_getfacl_result, acl_data=my_acl_data
-        )
+class TestEffectivePermissions:
 
-        assert my_get_facl_result.raw_std_out == example_system_getfacl_result
+    def test_effective_permissions_init(self, example_acl_data):
+        ep = EffectivePermissions(example_acl_data)
 
-        assert my_get_facl_result.acl_data.owning_user == "user_a"
-        assert my_get_facl_result.acl_data.owning_group == "user_a"
-        assert my_get_facl_result.acl_data.flags is None
-        assert my_get_facl_result.acl_data.user_permissions == "rwx"
-        assert my_get_facl_result.acl_data.group_permissions == "r-x"
-        assert my_get_facl_result.acl_data.other_permissions == "r-x"
-        assert my_get_facl_result.acl_data.mask == "rwx"
-        assert my_get_facl_result.acl_data.special_users_permissions == {
-            "pygetfacl_test_user": "rwx"
-        }
-        assert my_get_facl_result.acl_data.special_groups_permissions == {
-            "pygetfacl_test_group": "rw-"
-        }
-        assert my_get_facl_result.acl_data.default_user_permissions == "rwx"
-        assert my_get_facl_result.acl_data.default_group_permissions == "rwx"
-        assert my_get_facl_result.acl_data.default_other_permissions == "r-x"
+
+
