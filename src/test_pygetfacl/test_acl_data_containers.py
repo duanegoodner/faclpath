@@ -29,18 +29,6 @@ def example_acl_data(example_system_getfacl_result):
     return ACLData.from_getfacl_cmd_output(example_system_getfacl_result)
 
 
-@pytest.fixture
-def temp_dir_with_some_facl_settings(tmp_path):
-    my_dir = tmp_path
-    subprocess.check_call(["setfacl", "-bn", str(my_dir)])
-    subprocess.check_call(
-        ["setfacl", "-m", f"u:{os.getlogin()}:rwx", str(my_dir)]
-    )
-    subprocess.check_call(["setfacl", "-d", "-m", "g::rwx", str(my_dir)])
-    subprocess.check_call(["chmod", "g+s", str(my_dir)])
-    yield my_dir
-
-
 class TestACLData:
     def test_from_getfacl_cmd_output(self, example_system_getfacl_result):
         my_acl_data = ACLData.from_getfacl_cmd_output(
@@ -62,6 +50,9 @@ class TestACLData:
                 r=True, w=True, x=False
             )
         }
+        assert my_acl_data.default_special_groups == {}
+        assert my_acl_data.default_special_users == {}
+
         assert str(my_acl_data.default_user) == "rwx"
         assert str(my_acl_data.default_group) == "rwx"
         assert str(my_acl_data.default_other) == "r-x"
@@ -71,6 +62,29 @@ class TestEffectivePermissions:
 
     def test_effective_permissions_init(self, example_acl_data):
         ep = EffectivePermissions(example_acl_data)
+        assert str(ep.user) == "rwx"
+        assert str(ep.group) == "r-x"
+        assert str(ep.other) == "r-x"
+        assert str(ep.default_user) == "rwx"
+        assert str(ep.default_group) == "rwx"
+        assert str(ep.default_other) == "r-x"
+        assert ep.special_users == {
+            "pygetfacl_test_user": fs.PermissionSetting(r=True, w=True, x=True)
+        }
+        assert ep.special_groups == {
+            "pygetfacl_test_group": fs.PermissionSetting(
+                r=True, w=True, x=False
+            )
+        }
+        assert ep.default_special_groups == {
+            # "pygetfacl_test_group": fs.PermissionSetting(
+            #     r=True, w=True, x=False
+            # )
+        }
+
+        assert ep.default_special_users == {}
+
+        print("debugger break point")
 
 
 

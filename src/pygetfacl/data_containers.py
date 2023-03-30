@@ -89,7 +89,7 @@ class EffectivePermissions:
                 group: fs.compute_effective_permissions(
                     base=permission, mask=acl_data.default_mask
                 )
-                for group, permission in acl_data.special_groups.items()
+                for group, permission in acl_data.default_special_groups.items()
             }
 
         self.default_other = acl_data.default_other

@@ -1,5 +1,6 @@
 import pytest
-from pygetfacl.aclpath_exceptions import InvalidFileSetting
+
+from pygetfacl.aclpath_exceptions import InvalidFileSettingString
 from pygetfacl.file_setting import PermissionSetting
 
 good_permission_settings = [
@@ -13,6 +14,16 @@ good_permission_settings = [
     ("r", "-", "x"),
 ]
 
+
+@pytest.mark.parametrize(
+    "r_string, w_string, x_string", good_permission_settings
+)
+def test_good_permission_settings(r_string, w_string, x_string):
+    permissions = PermissionSetting.from_string(
+        "".join([r_string, w_string, x_string])
+    )
+
+
 bad_permission_settings = [
     ("e", "e", "e"),
     ("x", "w", "x"),
@@ -22,17 +33,10 @@ bad_permission_settings = [
 
 
 @pytest.mark.parametrize(
-    "r_string, w_string, x_string", good_permission_settings
-)
-def test_good_permission_settings(r_string, w_string, x_string):
-    permissions = PermissionSetting("".join([r_string, w_string, x_string]))
-
-
-@pytest.mark.parametrize(
     "r_string, w_string, x_string", bad_permission_settings
 )
-def test_good_permission_settings(r_string, w_string, x_string):
-    with pytest.raises(InvalidFileSetting):
-        permissions = PermissionSetting(
+def test_bad_permission_settings(r_string, w_string, x_string):
+    with pytest.raises(InvalidFileSettingString):
+        permissions = PermissionSetting.from_string(
             "".join([r_string, w_string, x_string])
         )

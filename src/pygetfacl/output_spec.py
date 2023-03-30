@@ -51,11 +51,16 @@ class ItemFromGetFacl:
                 self.attribute, len(matched_groups)
             )
 
-    def to_acl_constructor_format(self, matched_groups: list[str]):
+    def to_max_one_item_acl_format(self, matched_groups: list[str]):
+        assert len(matched_groups) <= 1
         if len(matched_groups) == 0:
             return None
-        if (len(matched_groups) == 1) and (self.max_entries == 1):
+        else:
             return self.acl_data_type(matched_groups[0].strip())
+
+    def to_multi_item_acl_format(self, matched_groups: list[str]):
+        if len(matched_groups) == 0:
+            return {}
         else:
             pairs = [item.split(":") for item in matched_groups]
             assert all([len(pair) == 2 for pair in pairs])
@@ -63,6 +68,23 @@ class ItemFromGetFacl:
                 name: self.acl_data_type(permission)
                 for name, permission in pairs
             }
+
+    def to_acl_constructor_format(self, matched_groups: list[str]):
+        if self.max_entries == 1:
+            return self.to_max_one_item_acl_format(matched_groups=matched_groups)
+        else:
+            return self.to_multi_item_acl_format(matched_groups=matched_groups)
+        # if len(matched_groups) == 0:
+        #     return None
+        # if (len(matched_groups) == 1) and (self.max_entries == 1):
+        #     return self.acl_data_type(matched_groups[0].strip())
+        # else:
+        #     pairs = [item.split(":") for item in matched_groups]
+        #     assert all([len(pair) == 2 for pair in pairs])
+        #     return {
+        #         name: self.acl_data_type(permission)
+        #         for name, permission in pairs
+        #     }
 
     # def to_dict_entry(self, matched_groups: list[str]):
     #     if len(matched_groups) == 0:
