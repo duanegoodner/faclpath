@@ -1,6 +1,4 @@
-import os
 import pytest
-import subprocess
 from pygetfacl.data_containers import ACLData, EffectivePermissions
 import pygetfacl.file_setting as fs
 
@@ -76,11 +74,7 @@ class TestEffectivePermissions:
                 r=True, w=True, x=False
             )
         }
-        assert ep.default_special_groups == {
-            # "pygetfacl_test_group": fs.PermissionSetting(
-            #     r=True, w=True, x=False
-            # )
-        }
+        assert ep.default_special_groups == {}
 
         assert ep.default_special_users == {}
 

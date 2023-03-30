@@ -48,6 +48,7 @@ class ACLData:
             )
         return cls(**kwargs)
 
+    @property
     def effective_permissions(self):
         return EffectivePermissions(self)
 
