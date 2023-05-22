@@ -1,13 +1,13 @@
 from pathlib import Path
-
 import pygetfacl.data_containers as dc
 import pygetfacl.subprocess_caller as sc
 
 
-class ACLInfoRetriever:
+class _ACLInfoRetriever:
     """
     Retrieves Access Control List info for its ._path data member
     """
+
     def __init__(self, path: str | Path):
         """
         Constructor
@@ -38,8 +38,8 @@ class ACLInfoRetriever:
 
 
 def getfacl_raw(path: str | Path) -> str:
-    return ACLInfoRetriever(path).getfacl_raw()
+    return _ACLInfoRetriever(path).getfacl_raw()
 
 
 def getfacl(path: str | Path) -> dc.ACLData:
-    return ACLInfoRetriever(path).getfacl()
+    return _ACLInfoRetriever(path).getfacl()
